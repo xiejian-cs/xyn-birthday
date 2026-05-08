@@ -563,7 +563,7 @@
   <!-- Video Modal -->
   <div class="lightbox" id="videoModal" onclick="closeVideoModal()">
     <button class="lightbox-close">&times;</button>
-    <video id="videoModalPlayer" controls playsinline style="max-width:90vw;max-height:85vh;border-radius:4px;"></video>
+    <video id="videoModalPlayer" controls playsinline muted preload="auto" style="max-width:90vw;max-height:85vh;border-radius:4px;"></video>
   </div>
 
   <script>
@@ -662,9 +662,12 @@
 
     function openVideoModal(idx) {
       videoPlayer.src = videos[idx];
+      videoPlayer.load();
       videoModal.classList.add('active');
       document.body.style.overflow = 'hidden';
-      videoPlayer.play().catch(() => {});
+      // 移动端必须静音才能自动播放
+      videoPlayer.muted = true;
+      videoPlayer.play().catch(err => { console.warn('视频播放失败:', err.message); });
     }
     function closeVideoModal() {
       videoPlayer.pause();
@@ -690,18 +693,33 @@
     const musicToggle = document.getElementById('musicToggle');
     let musicPlaying = false;
 
+    function startMusic() {
+      bgMusic.play().then(() => {
+        musicPlaying = true;
+        musicToggle.classList.add('playing');
+        musicToggle.textContent = '🎶';
+      }).catch(() => {});
+    }
+
     function toggleMusic() {
       if (musicPlaying) {
         bgMusic.pause();
         musicToggle.classList.remove('playing');
         musicToggle.textContent = '🎵';
+        musicPlaying = false;
       } else {
-        bgMusic.play().catch(() => {});
-        musicToggle.classList.add('playing');
-        musicToggle.textContent = '🎶';
+        startMusic();
       }
-      musicPlaying = !musicPlaying;
     }
+
+    // 进页面就尝试自动播放
+    startMusic();
+
+    // 如果自动播放被浏览器拦截，在用户首次点击页面时播放
+    document.addEventListener('click', function playOnTouch() {
+      if (!musicPlaying) startMusic();
+      document.removeEventListener('click', playOnTouch);
+    }, { once: true });
 
     // ===== 花瓣 =====
     const petalsBox = document.getElementById('petals');
