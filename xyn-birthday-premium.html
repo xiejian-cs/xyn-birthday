@@ -716,14 +716,17 @@
       }
     }
 
-    // 进页面就尝试自动播放
+    // 进页面就尝试自动播放（桌面端一般可行）
     startMusic();
 
-    // 如果自动播放被浏览器拦截，在用户首次点击页面时播放
-    document.addEventListener('click', function playOnTouch() {
+    // 移动端会被拦截，在用户首次触摸/点击时播放
+    // 用 capture 阶段确保不被 stopPropagation 拦截
+    document.addEventListener('touchstart', function playOnFirstTouch() {
       if (!musicPlaying) startMusic();
-      document.removeEventListener('click', playOnTouch);
-    }, { once: true });
+    }, { once: true, capture: true });
+    document.addEventListener('click', function playOnFirstClick() {
+      if (!musicPlaying) startMusic();
+    }, { once: true, capture: true });
 
     // ===== 花瓣 =====
     const petalsBox = document.getElementById('petals');
